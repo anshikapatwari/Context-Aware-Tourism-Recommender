@@ -22,7 +22,7 @@ Traditional CARS often struggle with the nonlinear relationships between context
 
 ## 📊 2. Dataset Mapping & Feature Engineering
 
-Because the original paper relied on a proprietary `GeoSPARQL` RDF ontology specific to the Santurbán ecosystem (natural reserves, rural hotels), we replicated the exact mathematical extraction methods using the **Yelp Open Dataset**.
+Because the original paper relied on a proprietary `GeoSPARQL` RDF ontology specific to the Santurbán ecosystem (natural reserves, rural hotels), we replicated the exact mathematical extraction methods using the **[Yelp Open Dataset](https://www.kaggle.com/datasets/yelp-dataset/yelp-dataset)**.
 
 ### Dataset Comparison
 | Aspect | Original Paper (Santurbán Paramo) | Our Replication (Yelp Dataset) |
