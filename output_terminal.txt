@@ -1,0 +1,742 @@
+================================================================================
+STEP 1.4: Loading Checkin Data
+================================================================================
+Checkins: 100%|███████████████████████████████████████████████████████████████████████████████████| 131930/131930 [00:01<00:00, 129255.89it/s]
+
+  Checkin records: 131,930
+  Checkin count stats:
+count    131930.000000
+mean        101.242136
+std         417.132327
+min           1.000000
+25%           6.000000
+50%          20.000000
+75%          72.000000
+max       52144.000000
+
+================================================================================
+STEP 1.5: Loading Tip Data
+================================================================================
+Tips: 100%|███████████████████████████████████████████████████████████████████████████████████████| 908915/908915 [00:02<00:00, 321101.32it/s]
+
+  Tip records: 908,915
+  Columns: ['user_id', 'business_id', 'text', 'date', 'compliment_count']
+  Missing values:
+user_id             0
+business_id         0
+text                0
+date                0
+compliment_count    0
+
+================================================================================
+STEP 1.6: Saving Processed DataFrames
+================================================================================
+
+  Saved 5 pickle files to: e:\Anshika_RS\data
+    business.pkl  →     150,346 rows  |      73.0 MB
+    review.pkl  →   6,990,280 rows  |    4586.8 MB
+    user.pkl  →   1,987,897 rows  |     336.3 MB
+    checkin.pkl  →     131,930 rows  |       4.2 MB
+    tip.pkl  →     908,915 rows  |     114.1 MB
+
+================================================================================
+STEP 1 COMPLETE — Data Loading Summary
+================================================================================
+
+  ┌──────────────────────────────────────────────┐
+  │  Dataset          │  Rows        │  Columns  │
+  ├──────────────────────────────────────────────┤
+  │  Business         │     150,346  │       12  │
+  │  Review           │   6,990,280  │        9  │
+  │  User             │   1,987,897  │       20  │
+  │  Checkin          │     131,930  │        2  │
+  │  Tip              │     908,915  │        5  │
+  └──────────────────────────────────────────────┘
+
+  All pickle files saved to: e:\Anshika_RS\data
+  ✅ Ready for Step 2: Feature Engineering
+
+PS E:\Anshika_RS> & C:/Users/MSI-1/AppData/Local/Programs/Python/Python313/python.exe e:/Anshika_RS/step2_feature_engineering.py
+
+================================================================================
+STEP 2.1: Loading Pickled DataFrames
+================================================================================
+  Business: 150,346 | Review: 6,990,280 | User: 1,987,897
+  Checkin: 131,930 | Tip: 908,915
+
+================================================================================
+STEP 2.2: Computing User Location Centroids
+================================================================================
+  (Paper uses GPS; we simulate from user's reviewed businesses)
+  Users with computed centroids: 1,987,929
+  Avg reviews per user: 3.5
+
+================================================================================
+STEP 2.3: Building User-Business Interaction Pairs
+================================================================================
+  Sampling 500,000 interactions from 6,990,280 total
+
+================================================================================
+STEP 2.4: Merging All Data Sources
+================================================================================
+  After merging business: 500,000 rows
+  After merging user centroids: 500,000 rows
+  After merging checkins: 500,000 rows
+  After merging tips: 500,000 rows
+  After merging user profile: 500,000 rows
+  Total columns: 25
+
+================================================================================
+STEP 2.5: Computing Haversine Distance
+================================================================================
+  Paper ref: d(u,i) = 2R·arcsin(√(sin²(Δφ/2) + cos(φu)cos(φi)sin²(Δλ/2)))
+  Distance stats (km):
+count    500000.000000
+mean         90.707538
+std         291.890493
+min           0.000000
+25%           1.169986
+50%           5.416881
+75%          18.068316
+max        3889.791850
+
+================================================================================
+STEP 2.6: Computing Composite Rating Score
+================================================================================
+  Combines business_stars, review_stars, business_review_count, checkin frequency
+  Composite rating stats:
+count    500000.000000
+mean          0.570290
+std           0.167856
+min           0.000000
+25%           0.476551
+50%           0.600287
+75%           0.692316
+max           0.926006
+
+================================================================================
+STEP 2.7: Computing Cost Feature
+================================================================================
+  Using RestaurantsPriceRange2 (1-4 scale)
+  Price range coverage: 413,478 / 500,000 (82.7%)
+  Distribution:
+price_range
+2.0    291482
+1.0     87650
+NaN     86522
+3.0     30543
+4.0      3803
+
+================================================================================
+STEP 2.8: Computing Additional Context Features
+================================================================================
+  Computed: user_engagement, review_helpfulness, popularity_score
+
+================================================================================
+STEP 2.9: Imputing Missing Values (SimpleImputer, strategy=mean)
+================================================================================
+  Missing BEFORE imputation:
+    price_range: 86,522 (17.30%)
+    user_avg_stars: 2 (0.00%)
+
+  ✅ Imputer saved to: e:\Anshika_RS\artifacts\imputer.joblib
+
+  Missing AFTER imputation:
+    Total NaN remaining: 0
+
+================================================================================
+STEP 2.10: Normalizing Features to [0, 1] (MinMaxScaler)
+================================================================================
+  ✅ Scaler saved to: e:\Anshika_RS\artifacts\scaler.joblib
+  norm_distance_km: [0.0000, 1.0000]
+  norm_composite_rating: [0.0000, 1.0000]
+  norm_price_range: [0.0000, 1.0000]
+  norm_user_engagement: [0.0000, 1.0000]
+  norm_review_helpfulness: [0.0000, 1.0000]
+  norm_popularity_score: [0.0000, 1.0000]
+  norm_user_avg_stars: [0.0000, 1.0000]
+  norm_review_stars: [0.0000, 1.0000]
+
+================================================================================
+STEP 2.11: Constructing Target Score
+================================================================================
+  Formula: target = 0.5*(1 - norm_distance) + 0.35*norm_rating + 0.15*(1 - norm_cost)
+  (Paper: proximity most important, then rating, then cost)
+
+  Target score stats:
+count    500000.000000
+mean          0.809877
+std           0.073216
+min           0.136910
+25%           0.769204
+50%           0.821897
+75%           0.861444
+max           0.983510
+
+================================================================================
+STEP 2.12: Defining Final Feature Set for DNN
+================================================================================
+  Core features (paper's 3):   ['norm_distance_km', 'norm_composite_rating', 'norm_price_range']
+  Extended features (all 8): ['norm_distance_km', 'norm_composite_rating', 'norm_price_range', 'norm_user_engagement', 'norm_review_helpfulness', 'norm_popularity_score', 'norm_user_avg_stars', 'norm_review_stars']
+
+================================================================================
+STEP 2.13: Saving Final Engineered Dataset
+================================================================================
+  Total samples:  500,000
+  Total features: 21
+  Saved: engineered_features.pkl (100.7 MB)
+  Saved: engineered_features.csv (172.9 MB)
+
+================================================================================
+STEP 2 COMPLETE — Feature Engineering Summary
+================================================================================
+
+  Paper Feature Mapping:
+  ┌────────────────────────────────────────────────────────────┐
+  │  Paper Concept         │  Yelp Implementation              │
+  ├────────────────────────────────────────────────────────────┤
+  │  norm_distance         │  Haversine from user centroid      │
+  │  calificación (rating) │  Composite: biz_stars + reviews    │
+  │  norm_costo (cost)     │  RestaurantsPriceRange2            │
+  └────────────────────────────────────────────────────────────┘
+
+  Target Formula:
+    target = 0.5*(1 - norm_dist) + 0.35*norm_rating + 0.15*(1 - norm_cost)
+
+  Artifacts saved:
+    - e:\Anshika_RS\artifacts\imputer.joblib
+    - e:\Anshika_RS\artifacts\scaler.joblib
+    - e:\Anshika_RS\artifacts\feature_config.joblib
+
+  ✅ Ready for Step 3: Data Splitting
+
+PS E:\Anshika_RS> & C:/Users/MSI-1/AppData/Local/Programs/Python/Python313/python.exe e:/Anshika_RS/step3_data_splitting.py
+
+================================================================================
+STEP 3.1: Loading Engineered Features
+================================================================================
+  Total samples: 500,000
+  Columns: ['user_id', 'business_id', 'name', 'categories', 'distance_km', 'composite_rating', 'price_range', 'user_engagement', 'review_helpfulness', 'popularity_score', 'user_avg_stars', 'review_stars', 'norm_distance_km', 'norm_composite_rating', 'norm_price_range', 'norm_user_engagement', 'norm_review_helpfulness', 'norm_popularity_score', 'norm_user_avg_stars', 'norm_review_stars', 'target_score']
+
+================================================================================
+STEP 3.2: Splitting Data (70% Train / 10% Val / 20% Test)
+================================================================================
+  Train:         350,000 samples (70.00%)
+  Validation:     50,000 samples (10.00%)
+  Test:          100,000 samples (20.00%)
+  Total:         500,000
+
+================================================================================
+STEP 3.3: Verifying Data Isolation (No Leakage)
+================================================================================
+  ✅ No overlap between train and validation
+  ✅ No overlap between train and test
+  ✅ No overlap between validation and test
+  ✅ Total samples match original dataset
+
+================================================================================
+STEP 3.4: Target Distribution Across Splits
+================================================================================
+
+  Train — target_score:
+    Mean:   0.8099
+    Std:    0.0732
+    Min:    0.1369
+    Max:    0.9835
+
+  Val — target_score:
+    Mean:   0.8102
+    Std:    0.0729
+    Min:    0.3070
+    Max:    0.9835
+
+  Test — target_score:
+    Mean:   0.8095
+    Std:    0.0734
+    Min:    0.2137
+    Max:    0.9835
+
+================================================================================
+STEP 3.5: Saving Split Datasets
+================================================================================
+  train.pkl  →     350,000 rows  |    74.4 MB
+  val.pkl  →      50,000 rows  |    11.9 MB
+  test.pkl  →     100,000 rows  |    22.8 MB
+
+  ⚠️  TEST SET IS SEALED — DO NOT LOAD UNTIL step6_final_evaluation.py
+
+================================================================================
+STEP 3 COMPLETE — Data Splitting Summary
+================================================================================
+
+  ┌───────────────────────────────────────────┐
+  │  Split       │  Samples     │  Percentage │
+  ├───────────────────────────────────────────┤
+  │  Train       │     350,000  │     70.0%  │
+  │  Validation  │      50,000  │     10.0%  │
+  │  Test ⛔     │     100,000  │     20.0%  │
+  └───────────────────────────────────────────┘
+
+  Files saved to: e:\Anshika_RS\data
+  ✅ Ready for Step 4: Model Training
+
+PS E:\Anshika_RS> & C:/Users/MSI-1/AppData/Local/Programs/Python/Python313/python.exe e:/Anshika_RS/step4_model_training.py
+
+================================================================================
+STEP 4.1: Loading Train & Validation Data
+================================================================================
+  Train: 350,000 samples
+  Val:   50,000 samples
+  ⚠️  Test set NOT loaded (sealed until Step 6)
+  Device: cuda
+
+================================================================================
+STEP 4.2: Preparing Feature Matrices
+================================================================================
+  Using 8 features: ['norm_distance_km', 'norm_composite_rating', 'norm_price_range', 'norm_user_engagement', 'norm_review_helpfulness', 'norm_popularity_score', 'norm_user_avg_stars', 'norm_review_stars']
+  Target: target_score
+
+  X_train shape: (350000, 8)
+  X_val shape:   (50000, 8)
+  y_train range: [0.1369, 0.9835]
+  y_val range:   [0.3070, 0.9835]
+
+================================================================================
+STEP 4.3: Creating PyTorch DataLoaders
+================================================================================
+  Train DataLoader: 10938 batches (shuffle=True, batch=32)
+  Val DataLoader:   1563 batches (shuffle=False, batch=32)
+
+================================================================================
+STEP 4.4: Building the Deep Neural Network
+================================================================================
+
+  Architecture (from Paper 28):
+  ┌────────────────────────────────────────────┐
+  │  Input(8)                              │
+  │  Linear(128) + ReLU                        │
+  │  Dropout(0.3)                            │
+  │  Linear(64) + ReLU                         │
+  │  Dropout(0.3)                            │
+  │  Linear(1) — Regression Output             │
+  └────────────────────────────────────────────┘
+
+  Model parameters: 9,473
+  Loss: MSE | Optimizer: Adam (lr=0.001)
+RecommenderDNN(
+  (network): Sequential(
+    (0): Linear(in_features=8, out_features=128, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.3, inplace=False)
+    (3): Linear(in_features=128, out_features=64, bias=True)
+    (4): ReLU()
+    (5): Dropout(p=0.3, inplace=False)
+    (6): Linear(in_features=64, out_features=1, bias=True)
+  )
+)
+
+================================================================================
+STEP 4.5: Training the DNN
+================================================================================
+  Max epochs: 300 | Batch size: 32 | LR: 0.001
+  EarlyStopping: patience=25
+--------------------------------------------------------------------------------
+  Epoch    1/300  |  Train Loss: 0.003968  MAE: 0.032295  |  Val Loss: 0.000028  MAE: 0.003703  |  LR: 1.00e-03
+  Epoch   10/300  |  Train Loss: 0.000132  MAE: 0.007842  |  Val Loss: 0.000008  MAE: 0.001823  |  LR: 1.00e-03
+  Epoch   20/300  |  Train Loss: 0.000129  MAE: 0.007756  |  Val Loss: 0.000027  MAE: 0.004548  |  LR: 1.00e-03
+  Epoch   30/300  |  Train Loss: 0.000115  MAE: 0.007167  |  Val Loss: 0.000009  MAE: 0.002274  |  LR: 5.00e-04
+  Epoch   40/300  |  Train Loss: 0.000106  MAE: 0.006857  |  Val Loss: 0.000005  MAE: 0.001750  |  LR: 2.50e-04
+  Epoch   50/300  |  Train Loss: 0.000106  MAE: 0.006859  |  Val Loss: 0.000006  MAE: 0.001338  |  LR: 2.50e-04
+  Epoch   60/300  |  Train Loss: 0.000103  MAE: 0.006714  |  Val Loss: 0.000002  MAE: 0.001054  |  LR: 1.25e-04
+  Epoch   70/300  |  Train Loss: 0.000102  MAE: 0.006639  |  Val Loss: 0.000005  MAE: 0.001422  |  LR: 6.25e-05
+  Epoch   80/300  |  Train Loss: 0.000101  MAE: 0.006611  |  Val Loss: 0.000006  MAE: 0.001982  |  LR: 6.25e-05
+  Epoch   90/300  |  Train Loss: 0.000100  MAE: 0.006580  |  Val Loss: 0.000004  MAE: 0.001489  |  LR: 3.13e-05
+  Epoch   96/300  |  Train Loss: 0.000100  MAE: 0.006574  |  Val Loss: 0.000004  MAE: 0.001262  |  LR: 1.56e-05
+
+  ⏹ EarlyStopping triggered at epoch 96 (patience=25)
+  ✅ Best weights restored (val_loss=0.000001)
+
+  Training completed!
+  Epochs run: 96
+  Best val_loss (MSE): 0.000001
+  Best val_mae:        0.000715
+
+================================================================================
+STEP 4.6: Saving Trained Model
+================================================================================
+  ✅ Full checkpoint: e:\Anshika_RS\saved_model\recommender_model.pth
+  ✅ Weights only: e:\Anshika_RS\saved_model\recommender_weights.pth
+  ⚠️  ONNX export skipped: Module onnx is not installed!
+
+================================================================================
+STEP 4.7: Saving Training History & Plots
+================================================================================
+  ✅ Training curves: e:\Anshika_RS\plots\training_curves.png
+
+================================================================================
+STEP 4 COMPLETE — Model Training Summary (PyTorch)
+================================================================================
+
+  Model Architecture (Paper 28):
+    Input(8) → Linear(128) + ReLU → Dropout(0.3)
+                 → Linear(64) + ReLU → Dropout(0.3)
+                 → Linear(1)
+
+  Training Config:
+    Optimizer: Adam (lr=0.001)
+    Loss: MSE | Epochs: 96/300
+    Batch: 32 | EarlyStopping: patience=25
+    Device: cuda
+
+  Results:
+    Best Val MSE:  0.000001
+    Best Val MAE:  0.000715
+
+  Saved to: e:\Anshika_RS\saved_model
+  ✅ Ready for Step 5: Model Evaluation (Validation Set)
+
+PS E:\Anshika_RS> & C:/Users/MSI-1/AppData/Local/Programs/Python/Python313/python.exe e:/Anshika_RS/step5_model_evaluation.py
+
+================================================================================
+STEP 5.1: Loading PyTorch Model and Validation Data
+================================================================================
+  ✅ Model loaded (trained for 96 epochs)
+  Validation samples: 50,000
+  ⚠️  Test set remains SEALED
+
+================================================================================
+STEP 5.2: Generating Predictions on Validation Set
+================================================================================
+  Predictions generated: 50,000
+  Pred range: [0.3240, 0.9823]
+  True range: [0.3070, 0.9835]
+
+================================================================================
+STEP 5.3: Computing Regression Metrics
+================================================================================
+
+  ┌────────────────────────────────────────────────────────────────┐
+  │  VALIDATION SET REGRESSION METRICS                            │
+  ├────────────────────────────────────────────────────────────────┤
+  │  MSE  (Mean Squared Error):                0.000001           │
+  │  RMSE (Root Mean Squared Error):           0.001056           │
+  │  MAE  (Mean Absolute Error):               0.000715           │
+  │  R²   (Coefficient of Determination):      0.999790           │
+  │  MAPE (Mean Abs Percentage Error):          0.0950%          │
+  └────────────────────────────────────────────────────────────────┘
+
+  Paper's reported values (on their ontology data):
+    RMSE = 0.1955, MAE = 0.0508, MSE = 0.0039, R² = 0.9959
+  Note: Different dataset, so exact match is not expected.
+
+STEP 5.4: Generating Visualizations
+================================================================================
+  ✅ Loss curves: e:\Anshika_RS\plots\val_loss_curves.png
+  ✅ Residual analysis: e:\Anshika_RS\plots\val_residual_analysis.png
+  ✅ Residual distribution: e:\Anshika_RS\plots\val_residual_distribution.png
+
+================================================================================
+STEP 5 COMPLETE — Validation Evaluation Summary
+================================================================================
+
+  Metrics (Validation Set — 50,000 samples):
+    MSE:   0.000001
+    RMSE:  0.001056
+    MAE:   0.000715
+    R²:    0.999790
+    MAPE:  0.0950%
+
+  Plots saved to: e:\Anshika_RS\plots
+    - val_loss_curves.png
+    - val_residual_analysis.png
+    - val_residual_distribution.png
+
+  ⚠️  Test set remains SEALED for Step 6
+  ✅ Ready for Step 6: Final Evaluation (Unseen Test Set)
+
+PS E:\Anshika_RS> & C:/Users/MSI-1/AppData/Local/Programs/Python/Python313/python.exe e:/Anshika_RS/step6_final_evaluation.py
+
+================================================================================
+STEP 6.1: Loading Model and UNSEEN Test Set
+================================================================================
+  🔓 UNSEALING THE TEST SET FOR THE FIRST TIME
+  ✅ Model loaded
+  Test samples: 100,000
+
+================================================================================
+STEP 6.2: Generating Test Set Predictions
+================================================================================
+  Predictions: 100,000
+  Pred range: [0.2356, 0.9822]
+  True range: [0.2137, 0.9835]
+
+================================================================================
+STEP 6.3: Regression Metrics on Test Set
+================================================================================
+
+  ┌────────────────────────────────────────────────────────────────┐
+  │  TEST SET REGRESSION METRICS (UNSEEN DATA)                    │
+  ├────────────────────────────────────────────────────────────────┤
+  │  MSE  (Mean Squared Error):                0.000001           │
+  │  RMSE (Root Mean Squared Error):           0.001069           │
+  │  MAE  (Mean Absolute Error):               0.000720           │
+  │  R²   (Coefficient of Determination):      0.999788           │
+  │  MAPE (Mean Abs Percentage Error):          0.0960%          │
+  └────────────────────────────────────────────────────────────────┘
+
+STEP 6.4: AUC-ROC Analysis
+================================================================================
+  AUC-ROC: 1.0000
+  Relevance threshold (75th pctile): 0.8611
+  ✅ ROC curve: e:\Anshika_RS\plots\test_roc_curve.png
+
+================================================================================
+STEP 6.5: Precision-Recall Curve
+================================================================================
+  ✅ PR curve: e:\Anshika_RS\plots\test_pr_curve.png
+
+================================================================================
+STEP 6.6: Per-User Ranking Metrics
+================================================================================
+
+  ┌──────────────────────────────────────────────┐
+  │  RANKING METRICS (averaged across users)     │
+  ├──────────────────────────────────────────────┤
+  │  k=5    P@k=0.7600  R@k=0.8609  NDCG@k=1.0000 │
+  │  k=10   P@k=0.4900  R@k=1.0000  NDCG@k=1.0000 │
+  │  k=20   P@k=0.2450  R@k=1.0000  NDCG@k=1.0000 │
+  └──────────────────────────────────────────────┘
+
+================================================================================
+STEP 6.7: Ranking Metrics Visualization
+================================================================================
+  ✅ Ranking metrics chart: e:\Anshika_RS\plots\test_ranking_metrics.png
+
+================================================================================
+STEP 6.8: Test Set Residual Analysis
+================================================================================
+  ✅ Test residuals: e:\Anshika_RS\plots\test_residual_analysis.png
+
+================================================================================
+STEP 6 COMPLETE — Final Test Evaluation Summary
+================================================================================
+
+  REGRESSION METRICS (Test Set — 100,000 samples):
+    MSE:   0.000001
+    RMSE:  0.001069
+    MAE:   0.000720
+    R²:    0.999788
+    MAPE:  0.0960%
+
+  CLASSIFICATION:
+    AUC-ROC: 1.0000
+
+  RANKING METRICS:
+    k=5: Precision=0.7600, Recall=0.8609, NDCG=1.0000
+    k=10: Precision=0.4900, Recall=1.0000, NDCG=1.0000
+    k=20: Precision=0.2450, Recall=1.0000, NDCG=1.0000
+
+  Plots saved to: e:\Anshika_RS\plots
+  ✅ Ready for Step 7: Hybrid Recommender System
+
+PS E:\Anshika_RS> & C:/Users/MSI-1/AppData/Local/Programs/Python/Python313/python.exe e:/Anshika_RS/step7_hybrid_recommender.py
+
+================================================================================
+STEP 7.1: Loading Model, Data, and Artifacts
+================================================================================
+  ✅ PyTorch model loaded
+  Full dataset: 500,000 interactions
+
+================================================================================
+STEP 7.2: Building User Category Preference Profiles
+================================================================================
+  Paper: p(u, c) ∈ [0, 1] for each user u and category c
+  Top 30 categories: ['Restaurants', 'Food', 'Shopping', 'Home Services', 'Beauty & Spas', 'Nightlife', 'Health & Medical', 'Local Services', 'Bars', 'Automotive']...
+  User-category preference pairs: 9,814,553
+
+================================================================================
+STEP 7.3: Selecting Sample Users for Demonstration
+================================================================================
+  Selected 5 active users for recommendation demo
+    User 1: _BcWyKQL16nd... (244 interactions)
+    User 2: Xw7ZjaGfr0WN... (137 interactions)
+    User 3: 1HM81n6n4iPI... (127 interactions)
+    User 4: -G7Zkl1wIWBB... (122 interactions)
+    User 5: 0Igx-a1wAsti... (118 interactions)
+
+================================================================================
+STEP 7.4: Generating Hybrid Recommendations
+================================================================================
+  Formula: s_final = 0.6 × s_NN + 0.4 × s_pref
+
+  ─── User 1: _BcWyKQL16ndpBdggh2k... ───
+    Generated top-15 recommendations
+
+  ─── User 2: Xw7ZjaGfr0WNVt6s_5KZ... ───
+    Generated top-15 recommendations
+
+  ─── User 3: 1HM81n6n4iPIFU5d2Lok... ───
+    Generated top-15 recommendations
+
+  ─── User 4: -G7Zkl1wIWBBmD0KRy_s... ───
+    Generated top-15 recommendations
+
+  ─── User 5: 0Igx-a1wAstiBDerGxXk... ───
+    Generated top-15 recommendations
+
+================================================================================
+STEP 7.5: Recommendation Tables (matching Paper 28, Table 1)
+================================================================================
+
+====================================================================================================
+  RECOMMENDATIONS FOR USER 1: _BcWyKQL16ndpBdggh2kNA...
+  Formula: final_score = 0.6 × DNN_Score + 0.4 × Pref_Score
+====================================================================================================
+  Rank   Business Name                       Category             DNN Score    Pref Score   Final Score
+  ────── ─────────────────────────────────── ──────────────────── ──────────── ──────────── ────────────
+  1      El Limon                            Mexican              100.00       71.27        88.5074
+  2      Bread Top House                     Food                 86.10        73.80        81.1816
+  3      Octopus Falafel Truck               Food Trucks          83.79        72.33        79.2044
+  4      Philadelphia Museum of Art          Art Museums          82.95        73.42        79.1399
+  5      Gentile's Fruit Market              Food                 79.26        77.56        78.5804
+  6      Longwood Gardens                    Active Life          79.30        76.89        78.3357
+  7      Sweet Freedom Bakery                Gluten-Free          78.52        72.33        76.0410
+  8      Village Whiskey                     Bars                 80.24        69.45        75.9214
+  9      Hershel's East Side Deli            Restaurants          78.61        71.14        75.6230
+  10     Lazaro's Pizzeria & Grill           Sandwiches           77.94        70.41        74.9294
+  11     Café Isla                           Food                 74.04        71.58        73.0528
+  12     Liberty Bell Center                 Local Services       69.19        78.55        72.9336
+  13     Lorenzo & Sons Pizza                Pizza                73.73        70.07        72.2690
+  14     Shane Confectionery                 Coffee & Tea         69.54        75.31        71.8485
+  15     Yogorino                            Desserts             70.41        73.80        71.7641
+
+====================================================================================================
+  RECOMMENDATIONS FOR USER 2: Xw7ZjaGfr0WNVt6s_5KZfA...
+  Formula: final_score = 0.6 × DNN_Score + 0.4 × Pref_Score
+====================================================================================================
+  Rank   Business Name                       Category             DNN Score    Pref Score   Final Score
+  ────── ─────────────────────────────────── ──────────────────── ──────────── ──────────── ────────────
+  1      French Truck Coffee                 Food                 99.47        81.12        92.1287
+  2      Erin Rose                           Dive Bars            100.00       77.56        91.0235
+  3      Angelo Brocato                      Bakeries             90.04        81.12        86.4748
+  4      Le Cafe Eblouir                     Cafes                87.24        81.12        84.7944
+  5      The Grill                           American (New)       87.48        80.24        84.5851
+  6      Hi-Do Bakery                        Bakeries             85.51        81.68        83.9823
+  7      The Sydney and Walda Besthoff Scu   Active Life          81.99        85.54        83.4108
+  8      The Rusty Nail                      Lounges              85.13        79.13        82.7276
+  9      Joey K's Restaurant & Bar           Restaurants          83.46        81.03        82.4872
+  10     Heard Dat Kitchen                   Restaurants          83.13        81.03        82.2884
+  11     Cherryberry                         Food                 82.00        82.34        82.1379
+  12     Big EZ Seafood                      Southern             80.29        80.93        80.5422
+  13     The Four Seasons Bar                Bars                 82.14        77.56        80.3097
+  14     Beachbum Berry's Latitude 29        Hawaiian             79.34        78.72        79.0910
+  15     Wayward Owl Brewing                 Breweries            76.49        82.34        78.8317
+
+====================================================================================================
+  RECOMMENDATIONS FOR USER 3: 1HM81n6n4iPIFU5d2Lokhw...
+  Formula: final_score = 0.6 × DNN_Score + 0.4 × Pref_Score
+====================================================================================================
+  Rank   Business Name                       Category             DNN Score    Pref Score   Final Score
+  ────── ─────────────────────────────────── ──────────────────── ──────────── ──────────── ────────────
+  1      The National WWII Museum            Hotels & Travel      98.23        67.82        86.0645
+  2      Twelve Mile Limit                   Restaurants          100.00       59.75        83.8989
+  3      Parkway Bakery & Tavern             Restaurants          99.02        60.10        83.4524
+  4      Pat O'Brien’s                       American (Traditio   95.28        60.27        81.2747
+  5      Cochon Butcher                      Shopping             93.59        62.60        81.1925
+  6      The Rusty Nail                      Lounges              94.13        60.61        80.7253
+  7      Pal's Lounge                        Lounges              92.79        59.39        79.4295
+  8      Commander's Palace                  French               92.59        59.10        79.1942
+  9      Royal House                         American (New)       91.55        59.65        78.7895
+  10     Angelo Brocato                      Bakeries             90.28        59.36        77.9111
+  11     St. James Cheese Company | Uptown   Restaurants          86.30        61.27        76.2851
+  12     Shawarma on the Go                  American (Traditio   87.55        58.39        75.8849
+  13     Short Stop Poboys                   Restaurants          86.19        59.66        75.5767
+  14     Harbor Seafood & Oyster Bar         Seafood              86.13        59.54        75.4982
+  15     Mother's Restaurant                 Cajun/Creole         83.59        61.06        74.5763
+
+====================================================================================================
+  RECOMMENDATIONS FOR USER 4: -G7Zkl1wIWBBmD0KRy_sCw...
+  Formula: final_score = 0.6 × DNN_Score + 0.4 × Pref_Score
+====================================================================================================
+  Rank   Business Name                       Category             DNN Score    Pref Score   Final Score
+  ────── ─────────────────────────────────── ──────────────────── ──────────── ──────────── ────────────
+  1      2nd Street Bagels                   Food                 100.00       73.72        89.4881
+  2      Yardley Ice House                   Ice Cream & Frozen   98.33        73.93        88.5671
+  3      PrimoHoagies                        Restaurants          98.11        72.63        87.9183
+  4      Tasty Place                         Restaurants          95.74        71.80        86.1597
+  5      Casanova's Kitchen                  Restaurants          94.82        71.16        85.3554
+  6      Elevation Burger                    Restaurants          92.89        71.84        84.4687
+  7      Carlucci's Grill Yardley            Restaurants          90.91        72.16        83.4094
+  8      El Limón                            Mexican              88.24        73.69        82.4212
+  9      Pho 75                              Vietnamese           88.49        71.80        81.8152
+  10     Ratchada Thai & Laos Cuisine        Restaurants          88.11        71.80        81.5837
+  11     Bob's Corner Deli                   Delis                85.37        73.96        80.8095
+  12     Washington Crossing Historic Park   Tours                82.47        78.06        80.7085
+  13     Five Guys                           American (New)       87.47        70.33        80.6123
+  14     Steam                               Restaurants          82.94        75.98        80.1562
+  15     Patel Brothers                      Food                 84.08        73.93        80.0203
+
+====================================================================================================
+  RECOMMENDATIONS FOR USER 5: 0Igx-a1wAstiBDerGxXk2A...
+  Formula: final_score = 0.6 × DNN_Score + 0.4 × Pref_Score
+====================================================================================================
+  Rank   Business Name                       Category             DNN Score    Pref Score   Final Score
+  ────── ─────────────────────────────────── ──────────────────── ──────────── ──────────── ────────────
+  1      The Chart Room                      Nightlife            100.00       78.19        91.2745
+  2      Gracious Bakery & Cafe              Restaurants          96.18        79.09        89.3439
+  3      Monkey Monkey Coffee and Tea        Breakfast & Brunch   93.08        79.03        87.4623
+  4      P's and Q's                         Restaurants          91.83        79.09        86.7339
+  5      Royal Street                        Nightlife            90.11        81.06        86.4871
+  6      Arnaud's French 75 Bar              Nightlife            91.67        78.36        86.3426
+  7      Carmo                               Asian Fusion         88.58        78.69        84.6242
+  8      Tartine                             French               87.37        79.31        84.1499
+  9      The Rendezvous Tavern               Bars                 83.58        78.19        81.4206
+  10     Zara's Lil' Giant Supermarket & P   Grocery              83.02        78.89        81.3658
+  11     Caesars Superdome                   Arts & Entertainme   77.95        83.66        80.2383
+  12     Clement Hardware & Variety          Shopping             78.62        80.70        79.4524
+  13     Betsys Pancake House                American (Traditio   80.08        78.29        79.3630
+  14     Sylvain                             Restaurants          79.68        78.45        79.1876
+  15     Hollygrove Market & Farm            Food                 77.87        80.41        78.8820
+
+================================================================================
+STEP 7.6: Saving Recommendations
+================================================================================
+  ✅ Saved: recommendations.csv (75 recommendations)
+
+================================================================================
+STEP 7.7: Generating Recommendation Visualizations
+================================================================================
+  ✅ Hybrid visualization: e:\Anshika_RS\plots\hybrid_recommendations.png
+
+================================================================================
+STEP 7 COMPLETE — Hybrid Recommender System Summary
+================================================================================
+
+  Hybrid Algorithm (Paper 28, Section 3.4.4):
+    s_final = α × s_NN + (1-α) × s_pref
+    α = 0.6 (DNN weight) | (1-α) = 0.4 (preference weight)
+
+  User Preference Model:
+    - Built from user's review history per business category
+    - Top 30 categories tracked
+    - p(u,c) ∈ [0, 1] normalized preference score
+
+    - Built from user's review history per business category
+    - Built from user's review history per business category
+    - Built from user's review history per business category
+    - Top 30 categories tracked
+    - Top 30 categories tracked
+    - p(u,c) ∈ [0, 1] normalized preference score
+
+  Results:
+    - 5 sample users demonstrated
+    - Top-15 recommendations generated per user
+    - Recommendation tables matching Paper 28 Table 1 format
+
+  Files:
+    - e:\Anshika_RS\data\recommendations.csv
+    - e:\Anshika_RS\plots\hybrid_recommendations.png
+
+  ══════════════════════════════════════════════
+  ✅ PIPELINE COMPLETE — All 7 Steps Finished!
+  ══════════════════════════════════════════════
