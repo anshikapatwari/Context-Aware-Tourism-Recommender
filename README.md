@@ -35,7 +35,6 @@ Because the original paper relied on a proprietary `GeoSPARQL` RDF ontology spec
 ### Contextual Feature Extraction (Steps 1 & 2)
 The raw data is serialized into highly optimized Pandas DataFrames. Features are extracted and normalized strictly to a `[0, 1]` range:
 1.  **Haversine Proximity ($d_{km}$):** Calculates the spherical distance between the user's centroid and the target business.
-    $$ d = 2R \cdot \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta\phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta\lambda}{2}\right)}\right) $$
 2.  **Composite Rating:** Fuses the true rating of the POI, the variance in the user's historical ratings, and logarithmically scaled `checkin` counts.
 3.  **Normalized Cost:** Direct mapping from missing-imputed price ranges.
 
