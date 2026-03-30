@@ -1,6 +1,6 @@
 # Context-Aware Tourism Recommender System 🌍
 
-This repository contains a full, comprehensive Python implementation replicating the methodology of the academic research article: **"A Context-Aware Tourism Recommender System Using a Hybrid Method Combining Deep Learning and Ontology-Based Knowledge" (Paper 28)**.
+This repository contains a full, comprehensive Python implementation replicating the methodology of the academic research article: **"A Context-Aware Tourism Recommender System Using a Hybrid Method Combining Deep Learning and Ontology-Based Knowledge"**.
 
 The project translates the original paper's localized geographic ontology framework into a globally scalable solution by substituting the proprietary Santurbán Paramo dataset with the massive **Yelp Academic Dataset**. This allows our deep learning model to evaluate geospatial proximity, cost, and popularity metrics alongside personalized semantic user preferences in a real-world, urban context.
 
@@ -118,7 +118,7 @@ By combining **60% Environmental Context (AI)** with **40% Semantic Affinity**, 
 <p align="center">
   <img src="plots/hybrid_recommendations.png" alt="Sample Local Recommendation Matrix" width="100%">
 </p>
-<p align="center"><i>Final Recommendation List generated for Sample Users (Matching Paper 28, Table 1).</i></p>
+<p align="center"><i>Final Recommendation List generated for Sample Users .</i></p>
 
 ---
 
