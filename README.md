@@ -4,6 +4,8 @@ This repository contains a full, comprehensive Python implementation replicating
 
 The project translates the original paper's localized geographic ontology framework into a globally scalable solution by substituting the proprietary Santurbán Paramo dataset with the massive **Yelp Academic Dataset**. This allows our deep learning model to evaluate geospatial proximity, cost, and popularity metrics alongside personalized semantic user preferences in a real-world, urban context.
 
+This project is a context-aware tourism recommender system that suggests places based on user preferences along with factors like location, rating, and cost.
+It combines a neural network with user interest patterns to give more relevant and personalized recommendations.
 ---
 
 ## 📖 1. Theoretical Background
